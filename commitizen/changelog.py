@@ -247,33 +247,63 @@ def incremental_build(
     unreleased_end = metadata.unreleased_end
     latest_version_position = metadata.latest_version_position
 
-    skip = False
+    # If we have a specific position to insert at, use that
+    if latest_version_position is not None:
+        return _insert_at_position(
+            lines,
+            new_content,
+            unreleased_start,
+            unreleased_end,
+            latest_version_position,
+        )
+
+    # Otherwise, append to the end
+    output_lines = (
+        lines[:]
+        if unreleased_start is None or unreleased_end is None
+        else lines[:unreleased_start] + lines[unreleased_end + 1 :]
+    )
+
+    # Add new content at the end
+    if output_lines and output_lines[-1].strip():
+        # Ensure at least one blank line between existing and new content
+        output_lines.append("\n")
+    output_lines.append(new_content)
+
+    return output_lines
+
+
+def _insert_at_position(
+    lines: list[str],
+    new_content: str,
+    unreleased_start: int | None,
+    unreleased_end: int | None,
+    latest_version_position: int,
+) -> list[str]:
+    """Insert new content at a specific position while skipping unreleased section."""
     output_lines: list[str] = []
+    skip = False
+
     for index, line in enumerate(lines):
+        # Handle unreleased section boundaries
         if index == unreleased_start:
             skip = True
         elif index == unreleased_end:
             skip = False
-            if (
-                latest_version_position is None
-                or latest_version_position > unreleased_end
-            ):
+            # If latest_version_position is after unreleased_end, skip the rest
+            if latest_version_position > unreleased_end:
                 continue
 
+        # Skip lines in unreleased section
         if skip:
             continue
 
+        # Insert new content at the specified position
         if index == latest_version_position:
             output_lines.extend([new_content, "\n"])
+
         output_lines.append(line)
 
-    if latest_version_position is not None:
-        return output_lines
-
-    if output_lines and output_lines[-1].strip():
-        # Ensure at least one blank line between existing and new content.
-        output_lines.append("\n")
-    output_lines.append(new_content)
     return output_lines
 
 
