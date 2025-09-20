@@ -219,6 +219,7 @@ class Bump:
         current_tag_version = getattr(
             current_tag, "name", rules.normalize_tag(current_version)
         )
+        logger.info(f"current_tag: {current_tag=}")
 
         is_initial = self._is_initial_tag(current_tag, self.arguments["yes"])
 

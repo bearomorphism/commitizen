@@ -1,6 +1,6 @@
 import itertools
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from textwrap import dedent
 
@@ -894,15 +894,19 @@ def test_changelog_from_rev_first_version_from_arg(
         f.write('tag_format = "$version"\n')
 
     # create commit and tag
-    create_file_and_commit("feat: new file")
+    now = datetime(2022, 2, 13)
+    create_file_and_commit("feat: new file", committer_date=now.isoformat())
 
     testargs = ["cz", "bump", "--yes"]
     mocker.patch.object(sys, "argv", testargs)
     cli.main()
-    wait_for_tag()
 
-    create_file_and_commit("feat: after 0.2.0")
-    create_file_and_commit("feat: another feature")
+    create_file_and_commit(
+        "feat: after 0.2.0", committer_date=(now + timedelta(days=1)).isoformat()
+    )
+    create_file_and_commit(
+        "feat: another feature", committer_date=(now + timedelta(days=2)).isoformat()
+    )
 
     testargs = ["cz", "bump", "--yes"]
     mocker.patch.object(sys, "argv", testargs)
