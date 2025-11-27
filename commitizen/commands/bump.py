@@ -101,16 +101,10 @@ class Bump:
         self.retry = arguments["retry"]
         self.pre_bump_hooks = self.config.settings["pre_bump_hooks"]
         self.post_bump_hooks = self.config.settings["post_bump_hooks"]
-        deprecated_version_type = arguments.get("version_type")
-        if deprecated_version_type:
-            warnings.warn(
-                DeprecationWarning(
-                    "`--version-type` parameter is deprecated and will be removed in v5. "
-                    "Please use `--version-scheme` instead"
-                )
-            )
         self.scheme = get_version_scheme(
-            self.config.settings, arguments["version_scheme"] or deprecated_version_type
+            self.config.settings,
+            arguments["version_scheme"],
+            arguments.get("version_type"),
         )
         self.file_name = arguments["file_name"] or self.config.settings.get(
             "changelog_file"

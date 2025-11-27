@@ -407,16 +407,25 @@ KNOWN_SCHEMES = [ep.name for ep in metadata.entry_points(group=SCHEMES_ENTRYPOIN
 """All known registered version schemes"""
 
 
-def get_version_scheme(settings: Settings, name: str | None = None) -> VersionScheme:
+def get_version_scheme(
+    settings: Settings,
+    name: str | None = None,
+    deprecated_version_type: str | None = None,
+) -> VersionScheme:
     """
     Get the version scheme as defined in the configuration
     or from an overridden `name`.
 
-
-
     :raises VersionSchemeUnknown: if the version scheme is not found.
     """
     # TODO: Remove the deprecated `version_type` handling
+    if deprecated_version_type:
+        warnings.warn(
+            DeprecationWarning(
+                "`--version-type` parameter is deprecated and will be removed in v5. "
+                "Please use `--version-scheme` instead"
+            )
+        )
     deprecated_setting: str | None = settings.get("version_type")
     if deprecated_setting:
         warnings.warn(
@@ -425,7 +434,12 @@ def get_version_scheme(settings: Settings, name: str | None = None) -> VersionSc
                 "Please use `version_scheme` instead"
             )
         )
-    name = name or settings.get("version_scheme") or deprecated_setting
+    name = (
+        name
+        or deprecated_version_type
+        or settings.get("version_scheme")
+        or deprecated_setting
+    )
     if not name:
         return DEFAULT_SCHEME
 
